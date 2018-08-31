@@ -1,0 +1,22 @@
+{
+  "name": "playnext",
+  "version": "1.0.0",
+  "description": "test",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Major666RUS/PlayNext.git"
+  },
+  "author": "Vadim Falin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Major666RUS/PlayNext/issues"
+  },
+  "homepage": "https://github.com/Major666RUS/PlayNext#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  }
+}

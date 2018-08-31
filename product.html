@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Страница продукта</title>
+    <script src="https://unpkg.com/vue"></script>
+</head>
+<body>
+    <div class="product" id="product">
+        <h1 class="product_title">Страница товара</h1>
+        <button
+                v-for="tab in tabs"
+                v-bind:key="tab"
+                v-bind:class="['tab-button', { active: currentTab === tab }]"
+                v-on:click="currentTab = tab"
+        >{{ tab }}</button>
+
+        <component
+                v-bind:is="currentTabComponent"
+                class="tab"
+        ></component>
+
+        <form action="index.php" method="post" enctype="application/x-www-form-urlencoded">
+            <p>Ваше имя:<br /><input type="text" name="your_name" /></p>
+            <p>E-mail:<br /><input type="text" name="email" /></p>
+            <p>Тема:<br /><input type="text" name="tema" /></p>
+            <p>Сообщение:<br />
+                <textarea name="message" rows="5" cols="45"> </textarea></p>
+            <p><input type="submit" value="Отправить"></p>
+        </form>
+    </div>
+    <script>
+        Vue.component('tab-home', {
+            template: '<div>Home component</div>'
+        })
+        Vue.component('tab-posts', {
+            template: '<div>Posts component</div>'
+        })
+        Vue.component('tab-archive', {
+            template: '<div>Archive component</div>'
+        })
+
+        new Vue({
+            el: '#product',
+            data: {
+                currentTab: 'Home',
+                tabs: ['Home', 'Posts', 'Archive']
+            },
+            computed: {
+                currentTabComponent: function () {
+                    return 'tab-' + this.currentTab.toLowerCase()
+                }
+            }
+        })
+    </script>
+</body>
+</html>
