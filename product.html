@@ -3,55 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <title>Страница продукта</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons&amp;subset=cyrillic" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@1.2.1/dist/vuetify.min.css">
     <script src="https://unpkg.com/vue"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@1.2.1/dist/vuetify.min.js"></script>
 </head>
 <body>
     <div class="product" id="product">
         <h1 class="product_title">Страница товара</h1>
-        <button
-                v-for="tab in tabs"
-                v-bind:key="tab"
-                v-bind:class="['tab-button', { active: currentTab === tab }]"
-                v-on:click="currentTab = tab"
-        >{{ tab }}</button>
 
-        <component
-                v-bind:is="currentTabComponent"
-                class="tab"
-        ></component>
+        <v-app id="inspire">
+            <v-carousel>
+                <v-carousel-item
+                        v-for="(item,i) in items"
+                        :key="i"
+                        :src="item.src"
+                ></v-carousel-item>
+            </v-carousel>
+        </v-app>
 
-        <form action="index.php" method="post" enctype="application/x-www-form-urlencoded">
-            <p>Ваше имя:<br /><input type="text" name="your_name" /></p>
-            <p>E-mail:<br /><input type="text" name="email" /></p>
-            <p>Тема:<br /><input type="text" name="tema" /></p>
-            <p>Сообщение:<br />
-                <textarea name="message" rows="5" cols="45"> </textarea></p>
-            <p><input type="submit" value="Отправить"></p>
+
+        <div class="tabs">
+            <button
+                    v-for="tab in tabs"
+                    v-bind:key="tab.name"
+                    v-bind:class="['tab-button', { active: currentTab.name === tab.name }]"
+                    v-on:click="currentTab = tab"
+            >{{ tab.name }}</button>
+
+            <component
+                    v-bind:is="currentTab.component"
+                    class="tab"
+            ></component>
+        </div>
+
+        <form v-if="!(form.response)" @submit.prevent="submitForm" action="index.php" class="form" id="form">
+            <h2>Закажите сейчас</h2>
+            <div class="form_field">
+                <label class="form_title" for="name">Ваше имя:</label>
+                <input class="form_input" id="name" name="name" type="text"required/>
+            </div>
+            <div class="form_field">
+                <label class="form_title" for="email">Email:</label>
+                <input class="form_input" id="email" name="email" type="email" required/>
+            </div>
+            <button class="form_button" type="submit">Отправить</button>
+            <div>{{form.error}}</div>
         </form>
+        <div v-else>{{form.response}}</div>
+
     </div>
     <script>
-        Vue.component('tab-home', {
-            template: '<div>Home component</div>'
-        })
-        Vue.component('tab-posts', {
-            template: '<div>Posts component</div>'
-        })
-        Vue.component('tab-archive', {
-            template: '<div>Archive component</div>'
-        })
+
+        var tabs = [
+            {
+                name: 'Описание товара',
+                component: {
+                    template: '<div>Lorem Ipsum - это текст-"рыба", часто используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов. Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн. Его популяризации в новое время послужили публикация листов Letraset с образцами Lorem Ipsum в 60-х годах и, в более недавнее время, программы электронной вёрстки типа Aldus PageMaker, в шаблонах которых используется Lorem Ipsum.</div>'
+                }
+            },
+            {
+                name: 'Технические характеристики',
+                component: {
+                    template: '<div><table border="0"><thead><tr><td>таблица</td><td>таблица</td><td>таблица</td></tr></thead><tbody><tr><td>таблица</td><td>таблица</td><td>таблица</td></tr><tr><td>таблица</td><td>таблица</td><td>таблица</td></tr></tbody></table></div>'
+                }
+            },
+            {
+                name: 'Файлы для скачивания',
+                component: {
+                    template: '<div class="fileList"><div class="fileList_item"><a class="fileList_itemLink typography_a" download href="http://test32.cat.mediaweb.ru/assets/page-files/0001/22/test.ppt"><svg fill-rule="evenodd" class="fileList_icon fileList_icon__rectangle"><use xlink:href="#svg_pdf__rectangle"></use></svg><span class="fileList_info">test</span></a>&nbsp;<span class="fileList_size">(pdf, 4 bytes)</span></div></div>'
+                }
+            }
+        ];
 
         new Vue({
             el: '#product',
             data: {
-                currentTab: 'Home',
-                tabs: ['Home', 'Posts', 'Archive']
+                items: [
+                    {
+                        src: 'https://cdn.vuetifyjs.com/images/carousel/squirrel.jpg'
+                    },
+                    {
+                        src: 'https://cdn.vuetifyjs.com/images/carousel/sky.jpg'
+                    },
+                    {
+                        src: 'https://cdn.vuetifyjs.com/images/carousel/bird.jpg'
+                    }
+                ],
+                tabs: tabs,
+                currentTab: tabs[0],
+                form: {
+                    error: '',
+                    response: ''
+                }
             },
             computed: {
                 currentTabComponent: function () {
                     return 'tab-' + this.currentTab.toLowerCase()
                 }
+            },
+            methods: {
+                submitForm: function () {
+                    this.$http.post('form.php', new FormData(form)).then(response => {
+                        if (response.body.rs) this.form.response = response.body.message;
+                    else this.form.error = response.body.message;
+                    //console.log(response.body);
+                }, response => {
+                        console.log(response);
+                    })
+                }
             }
         })
     </script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+        .application--wrap {
+            height: 500px;
+            min-height: 500px;
+            margin-bottom: 2rem;
+        }
+        .tabs {
+            margin-bottom: 1rem;
+        }
+        .tab-button {
+            padding: .75rem;
+            border-top-left-radius: .5rem;
+            border-top-right-radius: .5rem;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            background: #f0f0f0;
+            margin-bottom: -1px;
+            margin-right: -1px;
+            font-size: 1.25rem;
+            outline: none;
+        }
+        .tab-button:hover {
+            background: #e0e0e0;
+        }
+        .tab-button.active {
+            background: #e0e0e0;
+        }
+        .tab {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        table {
+            border-spacing: 0;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        th,
+        thead td {
+            background-color: #e6f4f2;
+            text-align: center;
+            padding: .75rem 1rem;
+            border: .125rem solid #a6bab7;
+        }
+        td {
+            padding: .75rem 1rem;
+            border: .125rem solid #a6bab7;
+            vertical-align: top;
+            background-color: #fff;
+        }
+        .fileList_item {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            font-size: 1.125rem;
+        }
+        .fileList_itemLink {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            color: #006864;
+        }
+        .fileList_icon {
+            width: 2rem;
+            height: 3rem;
+            margin-right: 1rem;
+        }
+        .fileList_size {
+            color: #a6bab7;
+            font-weight: 300;
+        }
+        .form {
+            padding: 2.5rem 0 3.5rem 5rem;
+            background-color: #e6f4f2;
+        }
+        .form_field {
+            display: block;
+            margin-bottom: 1.25rem;
+        }
+        .form_title {
+            display: block;
+            color: #101212;
+            font-size: 1.5rem;
+            font-weight: 500;
+            line-height: 1;
+            margin-bottom: 0.75rem;
+        }
+        .form_input {
+            box-sizing: border-box;
+            width: 384px;
+            max-width: 100%;
+            display: inline-block;
+            outline: none;
+            height: 3rem;
+            border: .125rem solid #a6bab7;
+            background-color: #ffffff;
+            color: #101212;
+            font-weight: 300;
+            padding: 0 1rem;
+            transition: border-color .15s ease-in-out, border-radius .3s ease-in-out;
+        }
+        .form_input:focus {
+            border-radius: .5rem;
+            border-color: #00a075;
+        }
+        .form_button {
+            width: 384px;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-box-pack: center;
+            -webkit-justify-content: center;
+            -ms-flex-pack: center;
+            justify-content: center;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            height: 4rem;
+            background-color: #e15338;
+            box-shadow: 3px 3px 8px rgba(0,0,0,0.16);
+            color: #fff;
+            font-size: 1.125rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            cursor: pointer;
+            letter-spacing: 1px;
+            -webkit-transition: border-radius 0.3s ease-in-out, -webkit-transform 0.3s ease-in-out;
+            transition: border-radius 0.3s ease-in-out, -webkit-transform 0.3s ease-in-out;
+            transition: transform 0.3s ease-in-out, border-radius 0.3s ease-in-out;
+            transition: transform 0.3s ease-in-out, border-radius 0.3s ease-in-out, -webkit-transform 0.3s ease-in-out;
+        }
+        .form_button:hover:not(:active) {
+            background-color: #c62f12;
+            box-shadow: 6px 10px 16px rgba(0,0,0,0.24);
+            color: #fff;
+            -webkit-transform: scale(1.03);
+            -ms-transform: scale(1.03);
+            transform: scale(1.03);
+        }
+        }
+    </style>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+        <symbol id="svg_audio__rectangle" viewBox="0 0 6.93028 8.65873">
+            <path fill="currentColor" stroke-width="0.0164635" d="M0.00823176 0.00823176l0.432113 0 3.45684 0 0.432113 0 2.59275 2.59275 0 0.432113 0 5.1853 0 0.432113 -0.432113 0 -6.04959 0 -0.432113 0 0 -0.432113 0 -7.77804 0 -0.432113zm2.16055 6.04959l0 -1.72845 2.16057 -0.360102 0.432113 -0.0720117 0 0.43879 0 1.72039 2.16057e-005 0.00138276c0,0.238613 -0.193522,0.432113 -0.432135,0.432113 -0.238591,0 -0.432092,-0.1935 -0.432092,-0.432113 0,-0.238591 0.1935,-0.432113 0.432092,-0.432113l0 -1.21778 -1.72845 0.287572 0 1.79258 2.16057e-005 0.00185809c0,0.238613 -0.193522,0.432113 -0.432135,0.432113 -0.238591,0 -0.432092,-0.1935 -0.432092,-0.432113 0,-0.238591 0.1935,-0.432113 0.432092,-0.432113zm1.72841 -3.45684l0 0.432113 2.59275 0 0 5.1853 -6.04959 0 0 -7.77804 3.45684 0 0 2.16063zm2.41376 0l-1.98165 0 0 -1.98163 1.98165 1.98163z"/>
+        </symbol>
+        <symbol id="svg_mov__rectangle" viewBox="0 0 5.59872 6.99507">
+            <path fill="currentColor" stroke-width="0.0133003" d="M0.00665013 0.00665013l0.349088 0 2.79266 0 0.349088 0 2.09458 2.09458 0 0.349088 0 4.18901 0 0.349088 -0.349088 0 -4.88724 0 -0.349088 0 0 -0.349088 0 -6.28359 0 -0.349088zm2.44362 4.01452l0.698177 0.523615 -0.698177 0.52365 0 -1.04727zm-1.39635 -0.872721l0 0.349088 0 0.349088 0 1.39635 0 0.349088 0 0.349088 0.349088 0 0 -0.349088 2.79271 0 0 0.349088 0.349088 0 0 -0.349088 0 -0.349088 0 -1.39635 0 -0.349088 0 -0.349088 -0.349088 0 0 0.349088 -2.79271 0 0 -0.349088 -0.349088 0zm0.349088 2.09453l0 -1.39635 2.79271 0 0 1.39635 -2.79271 0zm1.74539 -3.14174l0 0.349088 2.09458 0 0 4.18901 -4.88724 0 0 -6.28359 2.79266 0 0 1.74549zm1.94999 0l-1.6009 0 0 -1.60088 1.6009 1.60088z"/>
+        </symbol>
+        <symbol id="svg_xls__rectangle" viewBox="0 0 4.69637 5.86767">
+            <path fill="currentColor" stroke-width="0.0111567" d="M0.00557833 0.00557833l0.292826 0 2.34256 0 0.292826 0 1.757 1.757 0 0.292826 0 3.51386 0 0.292826 -0.292826 0 -4.09956 0 -0.292826 0 0 -0.292826 0 -5.27086 0 -0.292826zm1.61054 3.22108l0 0.585651 -0.439239 0 0 -0.585651 0.439239 0zm0 0.878477l0 0.585651 -0.439239 0 0 -0.585651 0.439239 0zm0.292826 0.585651l0 -0.585651 1.61054 0 0 0.585651 -1.61054 0zm0 -0.878477l0 -0.585651 1.61054 0 0 0.585651 -1.61054 0zm1.90337 0.878477l0 -0.585651 0 -0.292826 0 -0.585651 0 -0.292826 -0.292826 0 -1.61054 0 -0.292826 0 -0.439239 0 -0.292826 0 0 0.292826 0 0.585651 0 0.292826 0 0.585651 0 0.292826 0.292826 0 0.439239 0 0.292826 0 1.61054 0 0.292826 0 0 -0.292826zm-1.17135 -2.92821l0 0.292826 1.757 0 0 3.51386 -4.09956 0 0 -5.27086 2.34256 0 0 1.46417zm1.63571 0l-1.34288 0 0 -1.34287 1.34288 1.34287z"/>
+        </symbol>
+        <symbol id="svg_doc__rectangle" viewBox="0 0 5.59872 6.99507">
+            <path fill="currentColor" stroke-width="0.0121345" d="M0.00606726 0.00606726l0.318491 0 2.54788 0 0.318491 0 1.911 1.911 0 0.318491 0 3.82185 0 0.318491 -0.318491 0 -4.45888 0 -0.318491 0 0 -0.318491 0 -5.73285 0 -0.318491zm4.14039 3.18491l-3.18491 0 0 0.318491 3.18491 0 0 -0.318491zm0 0.955474l-3.18491 0 0 0.318491 3.18491 0 0 -0.318491zm-1.59246 0.955474l-1.59246 0 0 0.318491 1.59246 0 0 -0.318491zm0.318444 -3.18487l0 0.318491 1.911 0 0 3.82185 -4.45888 0 0 -5.73285 2.54788 0 0 1.5925zm1.77908 0l-1.46059 0 0 -1.46057 1.46059 1.46057z"/>
+        </symbol>
+        <symbol id="svg_txt__rectangle" viewBox="0 0 4.89354 6.11402">
+            <path fill="currentColor" stroke-width="0.0116251" d="M0.00581253 0.00581253l0.30512 0 2.44091 0 0.30512 0 1.83076 1.83076 0 0.30512 0 3.66139 0 0.30512 -0.30512 0 -4.27168 0 -0.30512 0 0 -0.30512 0 -5.49216 0 -0.30512zm1.87829 3.61399l-0.336974 0 0 0.993333 -0.295539 0 0 -0.993333 -0.330399 0 0 -0.227146 0.962912 0 0 0.227146zm0.56409 0.178526l0.200189 -0.405672 0.337447 0 -0.342329 0.605083 0.351513 0.615396 -0.340605 0 -0.206215 -0.413117 -0.206215 0.413117 -0.339736 0 0.350674 -0.615396 -0.34149 -0.605083 0.336608 0 0.200159 0.405672zm1.52415 -0.178526l-0.33699 0 0 0.993333 -0.295524 0 0 -0.993333 -0.330414 0 3.0512e-005 -0.227146 0.962897 0 0 0.227146zm-3.05114 1.57305l1.5256e-005 0 0.305105 0 2.4409 0 0.30512 0 0 -0.30512 -0.30512 0 -2.4409 0 -0.30512 0 0 0.30512zm3.05114 -2.13584l0 -0.30512 -1.5256e-005 0 -0.305105 0 -2.4409 0 -0.30512 0 0 0.30512 0.30512 0 2.4409 0 0.30512 0zm-1.22049 -1.22043l0 0.30512 1.83076 0 0 3.66139 -4.27168 0 0 -5.49216 2.44091 0 0 1.52564zm1.70438 0l-1.39926 0 0 -1.39925 1.39926 1.39925z"/>
+        </symbol>
+        <symbol id="svg_zip__rectangle" viewBox="0 0 6.19374 7.73849">
+            <path fill="currentColor" stroke-width="0.0147138" d="M0.0073569 0.0073569l0.386189 0 3.08945 0 0.386189 0 2.31719 2.31719 0 0.386189 0 4.63421 0 0.386189 -0.386189 0 -5.40665 0 -0.386189 0 0 -0.386189 0 -6.9514 0 -0.386189zm3.08945 5.02052l-0.386189 0 0 0.386189 0.386189 0 0 0.386189 0.386189 0 0 -0.386189 -0.386189 0 0 -0.386189 0.386189 0 0 -0.386189 -0.386189 0 0 0.386189zm0 1.15857l-0.386189 0 0.386189 0.386189 0.386189 -0.386189 -0.386189 0zm0 -1.54476l0 -0.386189 -0.386189 0 0 0.386189 0.386189 0zm0 -0.386189l0.386189 0 0 -0.386189 -0.386189 0 0 -0.386189 0.386189 0 0 -0.386189 -0.386189 0 0 -0.386189 -0.386189 0 0 0.386189 0.386189 0 0 0.386189 -0.386189 0 0 0.386189 0.386189 0 0 0.386189zm0.386189 -1.93095l0 0.386189 2.31719 0 0 4.63421 -5.40665 0 0 -6.9514 3.08945 0 0 1.931zm2.15723 0l-1.77104 0 0 -1.77102 1.77104 1.77102z"/>
+        </symbol>
+        <symbol id="svg_pdf__rectangle" viewBox="0 0 5.34211 6.67447">
+            <path fill="currentColor" stroke-width="0.0126907" d="M0.00634534 0.00634534l0.333089 0 2.66466 0 0.333089 0 1.99858 1.99858 0 0.333089 0 3.99701 0 0.333089 -0.333089 0 -4.66324 0 -0.333089 0 0 -0.333089 0 -5.9956 0 -0.333089zm1.33282 4.57772l0 0.451935 -0.321048 0 0 -1.33235 0.53156 0c0.101809,0 0.192076,0.0187362 0.270468,0.0562087 0.0783758,0.0374725 0.139048,0.0909166 0.182083,0.160216 0.0430684,0.0692825 0.0646525,0.147742 0.0646525,0.23581 0,0.129921 -0.0465825,0.233645 -0.139614,0.311388 -0.0930317,0.0777096 -0.220888,0.116798 -0.382902,0.116798l-0.205199 0zm0 -0.247985l0.210512 0c0.0624708,0 0.109819,-0.0155219 0.142412,-0.0465325 0.0325927,-0.0310439 0.0490473,-0.0752781 0.0490473,-0.13212 0,-0.0621377 -0.0170042,-0.111768 -0.0506128,-0.148974 -0.0334421,-0.0370395 -0.0791086,-0.0568416 -0.137099,-0.0568416l-0.214259 0 0 0.384468zm0.871527 0.699919l0 -1.33235 0.429118 0c0.117747,0 0.223652,0.0265305 0.317633,0.0799413 0.0939976,0.0533941 0.16736,0.129022 0.219889,0.226117 0.0527113,0.0974618 0.0802577,0.206465 0.0802577,0.32731l0 0.0612217c0,0.121794 -0.0259976,0.231413 -0.0774431,0.327926 -0.0516121,0.0967956 -0.124026,0.172407 -0.217707,0.227067 -0.0936812,0.0546432 -0.198038,0.0827726 -0.313253,0.0827726l-0.438495 0zm0.321381 -1.08439l0 0.837335 0.111485 0c0.092149,0 0.16283,-0.0327093 0.212394,-0.0983944 0.0494137,-0.0654852 0.0740123,-0.163014 0.0740123,-0.292319l0 -0.0577909c0,-0.128672 -0.0245986,-0.225568 -0.0740123,-0.290753 -0.0495636,-0.065352 -0.121511,-0.098078 -0.216141,-0.098078l-0.107738 0zm1.73967 0.55376l-0.51782 0 0 0.530627 -0.321381 0 0 -1.33235 0.891362 0 0 0.247968 -0.569981 0 0 0.306691 0.51782 0 0 0.247069zm-3.26613 1.16348l1.66544e-005 0 0.333072 0 2.66464 0 0.333089 0 0 -0.333089 -0.333089 0 -2.66464 0 -0.333089 0 0 0.333089zm3.33082 -2.33162l0 -0.333089 -1.66544e-005 0 -0.333072 0 -2.66464 0 -0.333089 0 0 0.333089 0.333089 0 2.66464 0 0.333089 0zm-1.33234 -1.3323l0 0.333089 1.99858 0 0 3.99701 -4.66324 0 0 -5.9956 2.66466 0 0 1.66549zm1.86062 0l-1.52753 0 0 -1.52751 1.52753 1.52751z"/>
+        </symbol>
+        <symbol id="svg_image__rectangle" viewBox="0 0 5.86752 7.3344">
+            <path fill="currentColor" d="M2.35905 4.94799l0.941425 -1.64751 1.46688 2.56704 -1.46688 0 -0.766261 -1.22605 -0.175164 0.306523 0.574705 0.919532 -1.10016 0 -0.73344 0 0.916799 -1.46688 0.342095 0.547348zm-2.35905 -4.94799l0.36672 0 2.9337 0 0.36672 0 2.20037 2.20037 0 0.36672 0 4.40058 0 0.36672 -0.36672 0 -5.13408 0 -0.36672 0 0 -0.36672 0 -6.60096 0 -0.36672zm3.30042 2.20037l0 0.36672 2.20037 0 0 4.40058 -5.13408 0 0 -6.60096 2.9337 0 0 1.83365zm2.04848 0l-1.68176 0 0 -1.68174 1.68176 1.68174zm-3.51528 1.1001c0.202521,0 0.366701,0.16418 0.366701,0.36672 1.8336e-005,0.202539 -0.16418,0.36672 -0.366701,0.36672 -0.202539,0 -0.366738,-0.16418 -0.366738,-0.36672 0,-0.202539 0.164199,-0.36672 0.366738,-0.36672z"/>
+        </symbol>
+        <symbol id="svg_unknown__rectangle" viewBox="0 0 6.54134 8.17279">
+            <path fill="currentColor" stroke-width="0.0155396" d="M0.00776978 0.00776978l0.407863 0 3.26284 0 0.407863 0 2.44724 2.44724 0 0.407863 0 4.89429 0 0.407863 -0.407863 0 -5.71008 0 -0.407863 0 0 -0.407863 0 -7.34153 0 -0.407863zm3.6707 2.44724l0 0.407863 2.44724 0 0 4.89429 -5.71008 0 0 -7.34153 3.26284 0 0 2.03937zm2.2783 0l-1.87044 0 0 -1.87042 1.87044 1.87042z"/>
+        </symbol>
+    </svg>
 </body>
 </html>
